@@ -1,0 +1,105 @@
+;;
+;; example input configuration for worm registration code
+;;
+(
+ ;;
+ ;; ======================================================================
+ ;; general program setup parameters
+ ;; ======================================================================
+ ;;
+ ;; ( verbose true )
+ ( verbose true )
+
+ ;; directory containing the image sequence
+ ( input_dir 
+   "/Volumes/My Passport/worms/serge register/c090122w00_RGBtiff/" )
+
+ ;; directory where images are to be dumped when registered
+ ( output_dir
+   "/Users/matt/tmp/testdump/" )
+
+ ;; frame to consider the reference frame
+ ( reference_frame 3 )
+
+ ;; first moving frame
+ ( start_frame 4 )
+
+ ;; last moving frame
+ ( end_frame 1300 )
+
+ ;; restarting from an earlier run
+ ( restarting false )
+
+ ;; frame to restart from (ignored if restarting=false)
+ ( restart_frame 677 )
+
+ ;; type of images based on their file extension
+ ( extension tif )
+
+ ;; filename base.  we assume a filename is BASE+frame#. 
+ ( filename_base "c090122w00" )
+
+ ;; number of digits in the frame number.  Often we will use frame
+ ;; numbers like "0013" instead of just "13".  In this case, we would 
+ ;; say the frame number has 4 digits.
+ ( frame_digits 4 )
+
+ ( initializer geometry )
+
+ ;;
+ ;; ======================================================================
+ ;; registration specific parameters
+ ;; ======================================================================
+ ;;
+
+ ;;
+ ;; specific parameters for the left-right rigid registration
+ ;;
+ ( left_right_params 
+   ( 
+     ;;
+     ;; first block : transform parameters to control scales used for
+     ;; optimization
+     ;;
+     (angle       0.01)
+     (rotCenterX  0.003)
+     (rotCenterY  0.003)
+     (translateX  0.003)
+     (translateY  0.003)
+
+     ;;
+     ;; second block : optimizer specific parameters related to step sizes
+     ;; and iteration count.
+     ;;
+     (maxStepLength  3.0)
+     (minStepLength  0.00001)
+     (iterationCount 250)
+   )
+ )
+
+ ;;
+ ;; specific parameters for the initial frame/frame registration.  note that
+ ;; these may be overridden if we start at an already registered frame
+ ;;
+ ( frame_frame_params 
+   ( 
+     ;;
+     ;; first block : transform parameters to control scales used for
+     ;; optimization
+     ;;
+     (angle       0.01)
+     (rotCenterX  0.00001)
+     (rotCenterY  0.00001)
+     (translateX  0.00001)
+     (translateY  0.00001)
+
+     ;;
+     ;; second block : optimizer specific parameters related to step sizes
+     ;; and iteration count.
+     ;;
+     (maxStepLength  0.5)
+     (minStepLength  0.0005)
+     (iterationCount 200)
+   )
+ )
+)

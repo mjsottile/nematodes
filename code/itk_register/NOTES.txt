@@ -1,0 +1,28 @@
+Worm registration notes
+Matt Sottile (matt@cs.uoregon.edu)
+
+---------
+BUILDING:
+---------
+
+Make sure sexpr library compiled and proper paths set in CMakeLists.txt.
+
+% export FLTK_DIR=/Users/matt/packages/FLTK/BUILD
+% export ITK_DIR=/Users/matt/packages/ITK/BUILD
+
+------
+STEPS:
+------
+
+* : Allowable transforms are translation, rotation.  No scaling or deformation.
+* : Must use conservative remapping during interpolation phase.
+
+1. Read reference image in.  Determine image dimensions.
+
+2. Allow optional parameter defining border size.
+
+3. Split image.
+
+4. Normalize right, normalize left.  Register and store transformation
+   result.  Call this "fixed transform".
+
