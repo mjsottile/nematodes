@@ -2,7 +2,7 @@ fnamebase = '/Users/matt/Dropbox/100210w02/100210w02 ';
 extn = '.png';
 
 lo = 1;
-hi = 9010;
+hi = 100;
 refframe = 1;
 
 thresh = 93;
