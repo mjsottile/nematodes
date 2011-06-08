@@ -25,7 +25,11 @@ function [ims] = load_directory(dname,pattern)
     
     h = waitbar(0,'Converting...');
     for i = 1:length(d)
-        ims{i} = double(rgb2gray(ims{i}));
+        if (size(ims{i},3)>1)
+            ims{i} = double(rgb2gray(ims{i}));
+        else
+            ims{i} = double(ims{i});
+        end
         waitbar(i/length(d));
     end
     
