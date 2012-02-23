@@ -9,7 +9,7 @@ ELSE (ITK_FOUND)
 ENDIF (ITK_FOUND)
 
 INCLUDE_DIRECTORIES(
-  /Users/matt/Research/sexpr/src/src
+  /Users/matt/Research/sexpr/sexpr/src
 )
 
 INCLUDE_DIRECTORIES(
