@@ -3,7 +3,7 @@ function t = truncate_centerline(cline, startpt,row)
   [rs,cs] = size(cline);
 
   i = startpt;
-  while (i <= rs && cline(i,1) > row)
+  while (i < rs && cline(i,1) < row)
       i = i+1;
   end
   
