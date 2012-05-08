@@ -141,6 +141,10 @@ while (keepgoing == 1)
     end
 end
 
+% adjust cline_seq to remove offsets used above
+cline_seq(:,1) = cline_seq(:,1) + roffset;
+cline_seq(:,2) = cline_seq(:,2) + coffset;
+
 % create a new matrix of the centerline, this time only including the
 % points along the centerline versus the whole skeleton
 newI = zeros(size(I))==1;
