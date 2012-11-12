@@ -17,7 +17,7 @@ INCLUDE_DIRECTORIES(
 )
 
 LINK_DIRECTORIES(
-  /Users/matt/Research/sexpr/src/src
+  /Users/matt/Research/sexpr/sexpr/src
 )
 
 ADD_EXECUTABLE( wormRegister 
