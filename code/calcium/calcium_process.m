@@ -2,8 +2,7 @@ function sig = calcium_process(thresh, radius, im)
     % signal to return
     sig = zeros(1,length(im));
     
-    for i=200:length(im)
-        disp(i)
+    for i=1:length(im)
         [lhs,rhs] = splitter(double(im{i}));
         
         % maximum intensity
