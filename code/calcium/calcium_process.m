@@ -46,6 +46,7 @@ function sig = calcium_process(thresh, radius, im)
 
         % do R computation.  Note that we take the mean of only the masked 
         % pixels to get the average intensity.
+        %%% modify to return individual signals too yfp=lhs, cfp=rhs
         sig(i) = ...
             (sum(lhs_masked(:))/length(find(circlemask_max))) / ...
             (sum(rhs_masked(:))/length(find(circlemask_max)));
