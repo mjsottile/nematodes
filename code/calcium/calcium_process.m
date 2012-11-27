@@ -36,7 +36,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 %   cfp     : the signal from the cyan channel with background removed
 %
 % Matthew Sottile / November 2012
-% mjsottile@gmail.cm
+% mjsottile@gmail.com
 %
 
     % signal to return
