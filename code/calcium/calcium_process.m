@@ -99,11 +99,15 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         lhs_masked = lhs.*double(circlemask_max);
         rhs_masked = rhs.*double(circlemask_max);
 
+        % count pixels that have values > 0 to compensate for
+        % registration clipping effects
+        rhs_nnz = length(find(rhs_masked(:) > 0));
+
         % do R computation.  Note that we take the mean of only the masked 
         % pixels to get the average intensity.  Subtract from each the
         % average of the background pixels determined above.
-        yfp(i) = (sum(lhs_masked(:))/length(find(circlemask_max))) - ybkg;
-        cfp(i) = (sum(rhs_masked(:))/length(find(circlemask_max))) - cbkg;
+        yfp(i) = (sum(lhs_masked(:))/rhs_nnz) - ybkg;
+        cfp(i) = (sum(rhs_masked(:))/rhs_nnz) - cbkg;
         sig(i) = yfp(i)/cfp(i);
             
         % correct for R_CFP.  Paper recommends value of 0.6 if it wasn't
