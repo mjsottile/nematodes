@@ -1,4 +1,4 @@
-function reconstruct_transform(regframe)
+function [theta,offsetx,offsety] = reconstruct_transform(regframe)
 
   % step 1: find some edges.  ideally we will have two dominant edges from
   %         the registration process, and can find those via the Houg
@@ -64,12 +64,16 @@ function reconstruct_transform(regframe)
   theta2 = atan(abs(horizline.point1(2)-horizline.point2(2)) / ...
                 abs(horizline.point1(1)-horizline.point2(1)));
             
-  theta = (theta1+theta2)/2;          
+  theta = (theta1+theta2)/2; 
 
   x1 = vertline.point1(1);
   x2 = vertline.point2(1);
   y1 = vertline.point1(2);
   y2 = vertline.point2(2);
+  
+  if (y1<y2 && x1<x2)
+      theta = -1.0 * theta;
+  end
   
   x3 = horizline.point1(1);
   x4 = horizline.point2(1);
@@ -78,15 +82,13 @@ function reconstruct_transform(regframe)
   
   % line intersection equation : 
   %     http://en.wikipedia.org/wiki/Line-line_intersection
-  px = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4)) / ...
-        (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);
+  px = round(((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4)) / ...
+        ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)));
     
-  py = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4)) / ...
-        (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);
-    
-  disp([px py]);
-  disp([x1 y1]);
-  disp([x2 y2]);
-  disp([x3 y3]);
-  disp([x4 y4]);
+  py = round(((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4)) / ...
+        ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)));
   
+  [height,width]=size(regframe);
+
+  offsetx = px-width;
+  offsety = py-height;

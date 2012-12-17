@@ -46,8 +46,14 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
     yfp = zeros(1,length(im));
     cfp = zeros(1,length(im));
     
+    % register and reconstruct transform
+    [~,rhs] = splitter(double(im{1}));
+    [theta,offsetx,offsety] = reconstruct_transform(rhs);
+    
     for i=1:length(im)
-        [lhs,rhs] = splitter(double(im{i}));
+        [~,ncols] = size(im{i});
+        lhs = im{i}(:,1:(ncols/2));
+        rhs = im{i}(:,(ncols/2)+1:end);
         
         % maximum intensity
         maxval = max(lhs(:));
@@ -92,12 +98,37 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         % make the circle mask.  
         [sr,sc] = size(lhs);
         [nc,nr] = ndgrid(1:sr,1:sc);
-        circlemask_max = sqrt((nc-Smax(largest_max).Centroid(2)).^2 + ...
-                          (nr-Smax(largest_max).Centroid(1)).^2) < radius;
+        lhs_circlemask_max = sqrt( ...
+                          (nc-Smax(largest_max).Centroid(2)).^2 + ...
+                          (nr-Smax(largest_max).Centroid(1)).^2) ...
+                         < radius;
+        
+        % make a new circle centered at a position that is offset and
+        % rotated based on the transformation we computed from the
+        % splitter results
+        rcx = Smax(largest_max).Centroid(2);
+        rcy = Smax(largest_max).Centroid(1);
+        
+        origx = rcx;
+        origy = rcy;
+        
+        rcx = rcx - offsetx;
+        rcy = rcy - offsety;
+        
+        nrcx = rcx * cos(theta)       + rcy * sin(theta);
+        nrcy = (0.0-rcx) * sin(theta) + rcy * cos(theta);
+        
+        %rcx = nrcx - offsetx;
+        %rcy = nrcy - offsety;
+        
+        rhs_circlemask_max = sqrt( ...
+                          (nc-rcx).^2 + ...
+                          (nr-rcy).^2) ...
+                         < radius;
 
         % mask the halves
-        lhs_masked = lhs.*double(circlemask_max);
-        rhs_masked = rhs.*double(circlemask_max);
+        lhs_masked = lhs.*double(lhs_circlemask_max);
+        rhs_masked = rhs.*double(rhs_circlemask_max);
 
         % count pixels that have values > 0 to compensate for
         % registration clipping effects
@@ -131,7 +162,8 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         imagesc(rhs_masked);
         colormap gray;
         hold on;
-        plot(Smax(largest_max).Centroid(1),Smax(largest_max).Centroid(2),'r+');
+        plot(rcy,rcx,'r+');
+        plot(origy,origx,'g+');
         hold off;
 
         % signal so far
