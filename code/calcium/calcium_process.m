@@ -52,8 +52,8 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
     
     for i=1:length(im)
         [~,ncols] = size(im{i});
-        lhs = im{i}(:,1:(ncols/2));
-        rhs = im{i}(:,(ncols/2)+1:end);
+        lhs = double(im{i}(:,1:(ncols/2)));
+        rhs = double(im{i}(:,(ncols/2)+1:end));
         
         % maximum intensity
         maxval = max(lhs(:));
