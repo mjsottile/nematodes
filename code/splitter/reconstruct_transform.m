@@ -1,7 +1,7 @@
 function [theta,offsetx,offsety] = reconstruct_transform(regframe)
 
   % step 1: find some edges.  ideally we will have two dominant edges from
-  %         the registration process, and can find those via the Houg
+  %         the registration process, and can find those via the Hough
   %         transform.
   
   % create binary image where edges of registered frame are apparent
@@ -71,6 +71,9 @@ function [theta,offsetx,offsety] = reconstruct_transform(regframe)
   y1 = vertline.point1(2);
   y2 = vertline.point2(2);
   
+  % want to do rotation in clockwise fashion, so if the rotation
+  % was counter clockwise, change sign of theta to put it into
+  % clockwise orientation
   if (y1<y2 && x1<x2)
       theta = -1.0 * theta;
   end
@@ -80,6 +83,15 @@ function [theta,offsetx,offsety] = reconstruct_transform(regframe)
   y3 = horizline.point1(2);
   y4 = horizline.point2(2);
   
+  % find where the two lines meet.  this will be the lower right
+  % corner of the registered image inside the frame.  from this
+  % we can approximate the translation that was performed.
+  % TODO: this is not likely correct since rotation was probably
+  % performed by imregister relative to the center of the rectangle,
+  % not the corner.  Hopefully the error is small and will put our
+  % target off by only a pixel or so, versus the 10 or so that we 
+  % get due to the optics.
+  %
   % line intersection equation : 
   %     http://en.wikipedia.org/wiki/Line-line_intersection
   px = round(((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4)) / ...
