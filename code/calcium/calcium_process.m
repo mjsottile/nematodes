@@ -112,14 +112,11 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         origx = rcx;
         origy = rcy;
         
-        rcx = rcx - offsetx;
-        rcy = rcy - offsety;
-        
         nrcx = rcx * cos(theta)       + rcy * sin(theta);
         nrcy = (0.0-rcx) * sin(theta) + rcy * cos(theta);
         
-        %rcx = nrcx - offsetx;
-        %rcy = nrcy - offsety;
+        rcx = nrcx - offsetx;
+        rcy = nrcy - offsety;
         
         rhs_circlemask_max = sqrt( ...
                           (nc-rcx).^2 + ...
