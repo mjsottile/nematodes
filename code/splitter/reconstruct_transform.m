@@ -55,7 +55,7 @@ function [theta,offsetx,offsety] = reconstruct_transform(regframe)
       vertline = line1;
       horizline = line2;
   end
-  
+
   % compute the same angle for both.  average them to get the
   % theta we will use to remove pixel-level effects that cause
   % the angles to be slightly different.
@@ -100,7 +100,27 @@ function [theta,offsetx,offsety] = reconstruct_transform(regframe)
   py = round(((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4)) / ...
         ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)));
   
+  % determine whether or not we need to shift up or down, left or
+  % right. if we are on the right or bottom, we have a negative offset
+  % in the appropriate direction.  If we are on the left or top, we
+  % have a positive offset in the appropriate direction.
   [height,width]=size(regframe);
 
-  offsetx = px-width;
-  offsety = py-height;
+  centerx = width/2;
+  centery = height/2;
+  
+  % assume that point1 of both vert and horiz lines are sufficient to
+  % determine which side of the center we are on.  This would only be
+  % violated if we have a massive offset or a huge angle.  If both are
+  % relatively small, this should be fine.
+  if (horizline.point1(2) > centery)
+      offsety = py-height;
+  else
+      offsety = py;
+  end
+  
+  if (vertline.point1(1) > centerx)
+      offsetx = px-width;
+  else
+      offsetx = px;
+  end
