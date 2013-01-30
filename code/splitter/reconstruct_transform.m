@@ -19,7 +19,7 @@ function [theta,offsetx,offsety] = reconstruct_transform(regframe)
   %         functions in a form that we can use to analyze their
   %         position and derive the transform from them that was
   %         used for the registration
-  lines = houghlines(BW,theta,rho,P,'FillGap',50,'MinLength',60);
+  lines = houghlines(BW,theta,rho,P,'FillGap',50,'MinLength',150);
 
   % now, find the two lines we care about - the longest mostly vertical
   % line and the longest mostly horizontal line.  we are assuming that
@@ -64,7 +64,7 @@ function [theta,offsetx,offsety] = reconstruct_transform(regframe)
   theta2 = atan(abs(horizline.point1(2)-horizline.point2(2)) / ...
                 abs(horizline.point1(1)-horizline.point2(1)));
             
-  theta = (theta1+theta2)/2; 
+  theta = (theta1+theta2)/2;
 
   x1 = vertline.point1(1);
   x2 = vertline.point2(1);
