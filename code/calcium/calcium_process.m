@@ -1,4 +1,4 @@
-function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
+function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im, refframe)
 %
 % calcium imaging processing code
 %
@@ -27,6 +27,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 %   radius  : radius of circle centered on the centroid of the cell
 %             of interest to measure.
 %   im      : sequence of images as a cell array
+%   refframe: reference frame
 %
 % output:
 %   sig     : the signal obtained by computing the ratio of the yellow
@@ -47,7 +48,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
     cfp = zeros(1,length(im));
     
     % register and reconstruct transform
-    [~,~,tform] = splitter(double(im{50}));
+    [~,~,tform] = splitter(double(im{refframe}));
 %    [theta,offsetx,offsety] = reconstruct_transform(rhs);
     
     % assemble transform matrix.  do this in matrix form
