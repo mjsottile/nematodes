@@ -43,5 +43,8 @@ for i=2:nlines
         [ys(lines(i,1)),ys(lines(i,2))],...
         [zs(lines(i,1)),zs(lines(i,2))]);
     hold off;
-    drawnow;
+    if (mod(i,200)==0)
+        disp(i)
+        drawnow;
+    end
 end
