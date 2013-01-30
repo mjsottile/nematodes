@@ -47,13 +47,28 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
     cfp = zeros(1,length(im));
     
     % register and reconstruct transform
-    [~,rhs] = splitter(double(im{1}));
-    [theta,offsetx,offsety] = reconstruct_transform(rhs);
+    [~,~,tform] = splitter(double(im{50}));
+%    [theta,offsetx,offsety] = reconstruct_transform(rhs);
+    
+    % assemble transform matrix.  do this in matrix form
+    % so we can possibly use the matlab affine transform
+    % function that takes a matrix as input in the future.
+%     mtx_rotate = [cos(theta),  sin(theta), 0; ...
+%                   -sin(theta), cos(theta), 0; ...
+%                   0          ,          0, 1];
+%               
+%     mtx_trans = [1, 0, -offsetx; ...
+%                  0, 1, -offsety; ...
+%                  0, 0,       1];
+%              
+%     % rotate then translate
+%     transform_matrix = mtx_trans * mtx_rotate;
     
     for i=1:length(im)
-        [~,ncols] = size(im{i});
-        lhs = double(im{i}(:,1:(ncols/2)));
-        rhs = double(im{i}(:,(ncols/2)+1:end));
+        [lhs,rhs] = splitter2(im{i},tform);
+%        [~,ncols] = size(im{i});
+%        lhs = double(im{i}(:,1:(ncols/2)));
+%        rhs = double(im{i}(:,(ncols/2)+1:end));
         
         % maximum intensity
         maxval = max(lhs(:));
@@ -96,33 +111,45 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         cbkg = sum(rhs_background(:))/length(find(background_mask));
 
         % make the circle mask.  
-        [sr,sc] = size(lhs);
-        [nc,nr] = ndgrid(1:sr,1:sc);
+        [size_rows,size_cols] = size(lhs);
+        [nc,nr] = ndgrid(1:size_rows,1:size_cols);
         lhs_circlemask_max = sqrt( ...
                           (nc-Smax(largest_max).Centroid(2)).^2 + ...
                           (nr-Smax(largest_max).Centroid(1)).^2) ...
                          < radius;
         
-        % make a new circle centered at a position that is offset and
-        % rotated based on the transformation we computed from the
-        % splitter results
-        rcx = Smax(largest_max).Centroid(2);
-        rcy = Smax(largest_max).Centroid(1);
-        
-        origx = rcx;
-        origy = rcy;
-        
-        nrcx = rcx * cos(theta)       + rcy * sin(theta);
-        nrcy = (0.0-rcx) * sin(theta) + rcy * cos(theta);
-        
-        rcx = nrcx - offsetx;
-        rcy = nrcy - offsety;
-        
-        rhs_circlemask_max = sqrt( ...
-                          (nc-rcx).^2 + ...
-                          (nr-rcy).^2) ...
-                         < radius;
+%         % make a new circle centered at a position that is offset and
+%         % rotated based on the transformation we computed from the
+%         % splitter results
+%         rcx = Smax(largest_max).Centroid(1);
+%         rcy = Smax(largest_max).Centroid(2);
+%         
+%         %%%%%% TODO: make sure to put (0,0) at center of image, not a
+%         %%%%%% corner.
+%         origx = rcx;
+%         origy = rcy;
+%         
+%         half_size_rows = size_rows/2;
+%         half_size_cols = size_cols/2;
+%         
+%         % shift origin to middle of region
+%         rcx = rcx - half_size_cols;
+%         rcy = rcy - half_size_rows;
+%         
+%         newcoords = transform_matrix * [rcx; rcy; 0];
+%         
+%         rcx = newcoords(1) + half_size_cols;
+%         rcy = newcoords(2) + half_size_rows;
+%         
+%         % make the circle mask for the RHS using the transformed
+%         % center.
+%         rhs_circlemask_max = sqrt( ...
+%                           (nc-rcy).^2 + ...
+%                           (nr-rcx).^2) ...
+%                          < radius;
 
+        rhs_circlemask_max = lhs_circlemask_max;
+        
         % mask the halves
         lhs_masked = lhs.*double(lhs_circlemask_max);
         rhs_masked = rhs.*double(rhs_circlemask_max);
@@ -147,6 +174,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         % plotting stuff
 
         % LHS plot
+        title(sprintf('%d',i));
         subplot(1,3,1);
         imagesc(lhs_masked);
         colormap gray;
@@ -159,8 +187,10 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         imagesc(rhs_masked);
         colormap gray;
         hold on;
-        plot(rcy,rcx,'r+');
-        plot(origy,origx,'g+');
+        plot(Smax(largest_max).Centroid(1),Smax(largest_max).Centroid(2),'r+');
+% 
+%         plot(rcx,rcy,'r+');
+%         plot(origx,origy,'g+');
         hold off;
 
         % signal so far
