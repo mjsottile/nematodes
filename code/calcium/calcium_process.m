@@ -1,4 +1,4 @@
-function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im, refframe)
+function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 %
 % calcium imaging processing code
 %
@@ -27,7 +27,6 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im, refframe)
 %   radius  : radius of circle centered on the centroid of the cell
 %             of interest to measure.
 %   im      : sequence of images as a cell array
-%   refframe: reference frame
 %
 % output:
 %   sig     : the signal obtained by computing the ratio of the yellow
@@ -40,12 +39,21 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im, refframe)
 % mjsottile@gmail.com
 %
 
+    % flag to see if we use the circle ROI or the largest connected
+    % component.  WARNING: setting this to 0 and using the connected
+    % component stuff is broken.  badly.  
+    use_circle = 1;
+
     % signal to return
     sig = zeros(1,length(im));
 
     % signal for each side individually
     yfp = zeros(1,length(im));
     cfp = zeros(1,length(im));
+    
+    % find a good reference frame based on the thresholds passed in
+    % 0.25 is hardcoded constant - could be adjusted.
+    refframe = find_goodframe(im, thresh, 0.25);
     
     % register to obtain transform.  discard registered frames since we will
     % re-register anyway later using the tform object.
@@ -71,7 +79,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im, refframe)
             largest_max = 0;
             largest_max_size = 0;
             for j=1:length(CCmax.PixelIdxList)
-                len = length(CCmax.PixelIdxList(j));
+                len = length(CCmax.PixelIdxList{j});
                 if (len > largest_max_size)
                     largest_max_size = len;
                     largest_max = j;
@@ -80,6 +88,28 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im, refframe)
         else
             % if we only had 1, then index 1 is the biggest
             largest_max = 1;
+        end
+        
+        % define the mask used to capture the neuron of interest
+        if (use_circle == 1)
+            % make the circle mask.
+            [size_rows,size_cols] = size(lhs);
+            [nc,nr] = ndgrid(1:size_rows,1:size_cols);
+            lhs_mask = sqrt( ...
+                (nc-Smax(largest_max).Centroid(2)).^2 + ...
+                (nr-Smax(largest_max).Centroid(1)).^2) ...
+                < radius;
+            rhs_mask = lhs_mask;
+        else
+            % try to make a mask based on the largest connected
+            % component.
+            BWmax = double(BWmax);
+            BWmax(CCmax.PixelIdxList{largest_max}) = 2;
+            lhs_mask = double(BWmax == 2);
+            strel_size = 15;
+            se = strel('ball',strel_size,strel_size);
+            lhs_mask = imdilate(lhs_mask,se) > strel_size;
+            rhs_mask = lhs_mask;
         end
         
         % find all pixels that are within bthresh of the minimum
@@ -93,19 +123,10 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im, refframe)
         % to be within what we call the background region
         ybkg = sum(lhs_background(:))/length(find(background_mask));
         cbkg = sum(rhs_background(:))/length(find(background_mask));
-
-        % make the circle mask.  
-        [size_rows,size_cols] = size(lhs);
-        [nc,nr] = ndgrid(1:size_rows,1:size_cols);
-        lhs_circlemask_max = sqrt( ...
-                          (nc-Smax(largest_max).Centroid(2)).^2 + ...
-                          (nr-Smax(largest_max).Centroid(1)).^2) ...
-                         < radius;
-        rhs_circlemask_max = lhs_circlemask_max;
-        
+                
         % mask the halves
-        lhs_masked = lhs.*double(lhs_circlemask_max);
-        rhs_masked = rhs.*double(rhs_circlemask_max);
+        lhs_masked = lhs.*double(lhs_mask);
+        rhs_masked = rhs.*double(rhs_mask);
 
         % count masked pixels in each side
         lhs_nnz = length(find(lhs_masked(:) > 0));
