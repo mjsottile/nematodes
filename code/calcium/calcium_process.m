@@ -149,7 +149,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 
         % LHS plot
         title(sprintf('%d',i));
-        subplot(1,3,1);
+        subplot(2,2,1);
         imagesc(lhs_masked);
         colormap gray;
         hold on;
@@ -157,7 +157,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         hold off;
 
         % RHS plot    
-        subplot(1,3,2);
+        subplot(2,2,2);
         imagesc(rhs_masked);
         colormap gray;
         hold on;
@@ -165,7 +165,7 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
         hold off;
 
         % signal so far
-        subplot(1,3,3);
+        subplot(2,2,3:4);
         plot(sig);
 
         drawnow;
