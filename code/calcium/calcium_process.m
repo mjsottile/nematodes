@@ -1,4 +1,4 @@
-function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
+function [sig,yfp,cfp] = calcium_process(frames, thresh, varargin)
 %
 % calcium imaging processing code
 %
@@ -8,10 +8,13 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 %   http://www.wormbook.org/chapters/www_imagingneurons/imagingneurons.html
 %
 % Extraction of the cells of interest and the non-fluorescent background
-% is based on crude threshold segmentation.  Two thresholds are required:
-% one for the high end to define bright regions representing cells of
-% interest, and one for the low end to define dim regions representing
-% background.  We are assuming that the frame is split down the middle
+% is based on crude threshold segmentation.  Threshold-based object
+% selection is used, with two thresholds (the first is required, the
+% second is optional): one for the high end to define bright regions 
+% representing cells of interest, and one for the low end to define dim 
+% regions representing background.  
+%
+% We are assuming that the frame is split down the middle
 % and rely on a helper function (splitter.m) to do the frame splitting
 % and registration of the halves to correct for distortions that result
 % from the imaging aparatus.  The distortions are assumed to be
@@ -19,14 +22,30 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 % length scales being unmodified.  A radius is provided for a circle
 % representing the region of interest around the identified bright cells.
 %
+% Example usage:
+%
+%   [ratio, yfp,cfp] = calcium_process(im,500,'bthresh',15,'circle',25)
+%
+% where im is the cell array of frames, 500 is the threshold above which
+% we treat pixels as being part of the cell.  bthresh indicates that
+% background selection is enabled with a threshold of 15.  circle indicates
+% that a circle-based ROI is to be used with a radius of 25.
+%
 % input:
+%   frames  : sequence of frames to process as a cell array
 %   thresh  : threshold for high end, where pixels above the threshold
 %             are considered part of fluorescing cells of interest.
-%   bthresh : threshold for low end, where pixels below the threshold
-%             are considered background and non-fluorescent.
-%   radius  : radius of circle centered on the centroid of the cell
-%             of interest to measure.
-%   im      : sequence of images as a cell array
+%   varargin: optional value/param arguments.  Legal optional arguments
+%             include:
+%
+%                'bthresh', val : enable background removal with the given
+%                                 background threshold value, where
+%                                 pixels with intensity < val will be
+%                                 considered background.
+%
+%                'circle', val  : toggle a circular ROI centered on the
+%                                 centroid of the detected cell with radius
+%                                 specified by val.
 %
 % output:
 %   sig     : the signal obtained by computing the ratio of the yellow
@@ -39,10 +58,36 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 % mjsottile@gmail.com
 %
 
+%% argument handling
+
+    p = inputParser;
+    addRequired(p, 'frames');
+    addRequired(p, 'thresh');
+    addParamValue(p, 'bthresh', -1);
+    addParamValue(p, 'circle', -1);
+    parse(p, frames, thresh, varargin{:});
+    
+    im = p.Results.frames;
+
     % flag to see if we use the circle ROI or the largest connected
     % component.  WARNING: setting this to 0 and using the connected
     % component stuff is broken.  badly.  
-    use_circle = 1;
+    if (p.Results.circle == -1)
+        use_circle = 0;
+    else
+        use_circle = 1;
+        radius = p.Results.circle;
+    end
+    
+    % background subtraction
+    if (p.Results.bthresh == -1)
+        handle_background = 0;
+    else
+        handle_background = 1;
+        bthresh = p.Results.bthresh;
+    end
+    
+%% the rest of the code
 
     % signal to return
     sig = zeros(1,length(im));
@@ -134,9 +179,16 @@ function [sig,yfp,cfp] = calcium_process(thresh, bthresh, radius, im)
 
         % do R computation.  Note that we take the mean of only the masked 
         % pixels to get the average intensity.  Subtract from each the
-        % average of the background pixels determined above.
-        yfp(i) = (sum(lhs_masked(:))/lhs_nnz) - ybkg;
-        cfp(i) = (sum(rhs_masked(:))/rhs_nnz) - cbkg;
+        % average of the background pixels determined above if
+        % handle_bakground is set.
+        if (handle_background == 1)
+            yfp(i) = (sum(lhs_masked(:))/lhs_nnz) - ybkg;
+            cfp(i) = (sum(rhs_masked(:))/rhs_nnz) - cbkg;
+        else
+            yfp(i) = (sum(lhs_masked(:))/lhs_nnz);
+            cfp(i) = (sum(rhs_masked(:))/rhs_nnz);
+        end
+        
         sig(i) = yfp(i)/cfp(i);
             
         % correct for R_CFP.  Paper recommends value of 0.6 if it wasn't
