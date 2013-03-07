@@ -159,16 +159,18 @@ function [sig,yfp,cfp] = calcium_process(frames, thresh, varargin)
         
         % find all pixels that are within bthresh of the minimum
         % intensity to define the background
-        minval = min(lhs(:));
-        background_mask = lhs < (minval + bthresh);
-        lhs_background = lhs .* double(background_mask);
-        rhs_background = rhs .* double(background_mask);
+        if (handle_background == 1)
+          minval = min(lhs(:));
+          background_mask = lhs < (minval + bthresh);
+          lhs_background = lhs .* double(background_mask);
+          rhs_background = rhs .* double(background_mask);
         
-        % compute y_bkg and c_bkg as average value of pixels determined
-        % to be within what we call the background region
-        ybkg = sum(lhs_background(:))/length(find(background_mask));
-        cbkg = sum(rhs_background(:))/length(find(background_mask));
-                
+          % compute y_bkg and c_bkg as average value of pixels determined
+          % to be within what we call the background region
+          ybkg = sum(lhs_background(:))/length(find(background_mask));
+          cbkg = sum(rhs_background(:))/length(find(background_mask));
+        end          
+      
         % mask the halves
         lhs_masked = lhs.*double(lhs_mask);
         rhs_masked = rhs.*double(rhs_mask);
