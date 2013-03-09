@@ -15,7 +15,6 @@ function [t,bt] = thresh_estimate(im)
     %
     numim = length(im);
     
-    centers = zeros(1,numim);
     bright_min = zeros(1,numim);
     dim_ctr = zeros(1,numim);
     
@@ -25,12 +24,7 @@ function [t,bt] = thresh_estimate(im)
         masked = (u==2).*im{i};
         bright_min(i) = min(find(masked(:)));
         
-        dim_ctr(i) = c(1);
-
-        if (mod(i,10)==0)
-            disp(i)
-        end
-        
+        dim_ctr(i) = c(1);        
     end
 
     t = mean(bright_min) - std(bright_min);
