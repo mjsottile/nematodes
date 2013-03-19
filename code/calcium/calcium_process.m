@@ -1,4 +1,4 @@
-function [sig,yfp,cfp] = calcium_process(frames, thresh, varargin)
+function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
 %
 % calcium imaging processing code
 %
@@ -199,6 +199,10 @@ function [sig,yfp,cfp] = calcium_process(frames, thresh, varargin)
         % actual flourescence from the cell.
         sig(i) = sig(i)-0.6;
 
+        %return centroid data
+        centx(i) = Smax(largest_max).Centroid(1);
+        centy(i) = Smax(largest_max).Centroid(2);
+
         % plotting stuff
 
         % LHS plot
@@ -224,3 +228,5 @@ function [sig,yfp,cfp] = calcium_process(frames, thresh, varargin)
 
         drawnow;
     end
+
+[nangle] = neuron_angle(framesize, centx, centy);
