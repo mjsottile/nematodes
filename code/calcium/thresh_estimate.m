@@ -22,7 +22,8 @@ function [t,bt] = thresh_estimate(im)
         [u,c] = kmeans(im{i},2,10);
         
         masked = (u==2).*im{i};
-        bright_min(i) = min(find(masked(:)));
+        masked(~masked) = inf;
+        bright_min(i) = min(masked(:));
         
         dim_ctr(i) = c(1);        
     end
