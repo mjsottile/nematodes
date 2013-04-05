@@ -87,6 +87,15 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
         bthresh = p.Results.bthresh;
     end
     
+    %%% NOTE: EXPERIMENTAL CODE
+    % thresh estimate toggle
+    use_thresh_estimate = 1;
+    if (use_thresh_estimate == 1)
+        [te_bright, te_dim] = thresh_estimate(frames);
+        thresh = te_bright;
+    end
+    %%% END EXPERIMENTAL CODE
+    
 %% the rest of the code
 
     % signal to return
@@ -111,7 +120,11 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
         maxval = max(lhs(:));
 
         % binary image with all pixels within thresh of the max intensity
-        BWmax = lhs>(maxval-thresh);
+        if (use_thresh_estimate == 1)
+            BWmax = lhs > te_bright;
+        else
+            BWmax = lhs > (maxval-thresh);
+        end
 
         % compute connected components of thresholded regions
         CCmax = bwconncomp(BWmax);
@@ -161,7 +174,11 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
         % intensity to define the background
         if (handle_background == 1)
           minval = min(lhs(:));
-          background_mask = lhs < (minval + bthresh);
+          if (use_thresh_estimate == 1)
+              background_mask = lhs < te_dim;
+          else
+              background_mask = lhs < (minval + bthresh);
+          end
           lhs_background = lhs .* double(background_mask);
           rhs_background = rhs .* double(background_mask);
         

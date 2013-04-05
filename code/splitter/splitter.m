@@ -17,7 +17,7 @@ function [lhs, rhsRegistered, tform] = splitter(im)
   optimizer.MinimumStepLength = 5e-3;
   
   [tform_string,rhsRegistered] = evalc('imregister(rhs, lhs, ''rigid'', optimizer, metric, ''DisplayOptimization'', true)');
-
+  
   % this is a horrendous hack!!!!
   strtok(tform_string,'imtransform.');
   [~,ss] = regexp(tform_string,'imtransform.','match','split');

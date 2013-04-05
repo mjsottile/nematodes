@@ -7,7 +7,12 @@ function refframe = find_goodframe(ims, thresh, frac)
     % within the threshold of the max.
     for i=1:numim
         maxval(i) = max(ims{i}(:));
-        masked = ims{i}(:) > (maxval(i)-thresh);
+        
+%%% NOTE: CHANGED TO EXPERIMENT WITH ABSOLUTE THRESHOLDS
+%        masked = ims{i}(:) > (maxval(i)-thresh);
+        masked = ims{i}(:) > thresh;
+%%%
+
         nummasked(i) = length(find(masked(:)));
     end
     
