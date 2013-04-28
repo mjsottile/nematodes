@@ -1,4 +1,4 @@
-function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
+function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
 %
 % calcium imaging processing code
 %
@@ -24,7 +24,7 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
 %
 % Example usage:
 %
-%   [ratio, yfp,cfp] = calcium_process(im,500,'bthresh',15,'circle',25)
+%   [ratio, yfp, cfp] = calcium_process(im,500,'bthresh',15,'circle',25)
 %
 % where im is the cell array of frames, 500 is the threshold above which
 % we treat pixels as being part of the cell.  bthresh indicates that
@@ -33,10 +33,12 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
 %
 % input:
 %   frames  : sequence of frames to process as a cell array
-%   thresh  : threshold for high end, where pixels above the threshold
-%             are considered part of fluorescing cells of interest.
+%
 %   varargin: optional value/param arguments.  Legal optional arguments
 %             include:
+%                'thresh', val  : threshold for high end, where pixels 
+%                                 above the threshold are considered
+%                                 part of fluorescing cells of interest.
 %
 %                'bthresh', val : enable background removal with the given
 %                                 background threshold value, where
@@ -58,15 +60,17 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
 % mjsottile@gmail.com
 %
 
-%% argument handling
-
+    %
+    % argument handling
+    %
     p = inputParser;
     addRequired(p, 'frames');
-    addRequired(p, 'thresh');
+    addParamValue(p, 'thresh', -1);
     addParamValue(p, 'bthresh', -1);
     addParamValue(p, 'circle', -1);
-    parse(p, frames, thresh, varargin{:});
+    parse(p, frames, varargin{:});
     
+    % frames
     im = p.Results.frames;
 
     % flag to see if we use the circle ROI or the largest connected
@@ -87,14 +91,14 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
         bthresh = p.Results.bthresh;
     end
     
-    %%% NOTE: EXPERIMENTAL CODE
-    % thresh estimate toggle
-    use_thresh_estimate = 1;
-    if (use_thresh_estimate == 1)
-        [te_bright, te_dim] = thresh_estimate(frames);
-        thresh = te_bright;
-    end
-    %%% END EXPERIMENTAL CODE
+%     %%% NOTE: EXPERIMENTAL CODE
+%     % thresh estimate toggle
+%     use_thresh_estimate = 1;
+%     if (use_thresh_estimate == 1)
+%         [te_bright, te_dim] = thresh_estimate(frames);
+%         thresh = te_bright;
+%     end
+%     %%% END EXPERIMENTAL CODE
     
 %% the rest of the code
 
@@ -105,26 +109,42 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
     yfp = zeros(1,length(im));
     cfp = zeros(1,length(im));
     
-    % find a good reference frame based on the thresholds passed in
-    % 0.25 is hardcoded constant - could be adjusted.
-    refframe = find_goodframe(im, thresh, 0.25);
+    % find a good reference frame
+    % 0.25 is hardcoded constant - could be adjusted.  
+    % based on guessing a threshold from a small set of evenly spaced
+    % images from the sequence.  Hopefully the majority of these would
+    % be considerd "good" frames.
+    refthresh = 0;
+    numtests = 60;
+    testindices = (1:numtests)*floor(length(im)/numtests);
+    disp('Sampling images for thresholding.');
+    
+    for i=1:numtests
+        [testt,~] = thresh_estimate(im{testindices(i)});
+        refthresh = refthresh + testt;
+    end
+    
+    refthresh = refthresh / numtests;
+    
+    refframe = find_goodframe(im, refthresh, 0.25);
     
     % register to obtain transform.  discard registered frames since we will
     % re-register anyway later using the tform object.
     [~,~,tform] = splitter(double(im{refframe}));
 
+    disp(refthresh)
+    disp('Processing.');
     for i=1:length(im)
+        % compute threshold for this frame
+        [thresh, bthresh] = thresh_estimate(im{i});
+        
         [lhs,rhs] = splitter2(im{i},tform);
         
         % maximum intensity
         maxval = max(lhs(:));
 
         % binary image with all pixels within thresh of the max intensity
-        if (use_thresh_estimate == 1)
-            BWmax = lhs > te_bright;
-        else
-            BWmax = lhs > (maxval-thresh);
-        end
+        BWmax = lhs > thresh;
 
         % compute connected components of thresholded regions
         CCmax = bwconncomp(BWmax);
@@ -174,11 +194,8 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, thresh, varargin)
         % intensity to define the background
         if (handle_background == 1)
           minval = min(lhs(:));
-          if (use_thresh_estimate == 1)
-              background_mask = lhs < te_dim;
-          else
-              background_mask = lhs < (minval + bthresh);
-          end
+          background_mask = lhs < bthresh;
+          
           lhs_background = lhs .* double(background_mask);
           rhs_background = rhs .* double(background_mask);
         

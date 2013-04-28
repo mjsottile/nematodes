@@ -1,33 +1,36 @@
 function [t,bt] = thresh_estimate(im)
-    % estimate the thresholds to use for identifying the neuron of
-    % interest as well as the background from the given image sequence.
-    %
-    % the criteria for selection are:
-    %   - for each frame, use k-means clustering to partition the
-    %     intensities into two groups (bright, dim)
-    %   - for each frame, record the minimum intensity in the bright
-    %     region and the cluster center for the dim region.
-    %   - set the high-end threshold as the mean of the minimum
-    %     bright region intensity minus one standard deviation of the
-    %     minimum intensity over the sequence.
-    %   - set the background threshold to 10% of the mean dim region
-    %     cluster center.
-    %
-    numim = length(im);
-    
-    bright_min = zeros(1,numim);
-    dim_ctr = zeros(1,numim);
-    
-    for i=1:numim
-        [u,c] = kmeans(im{i},2,10);
-        
-        masked = (u==2).*im{i};
-        masked(~masked) = inf;
-        bright_min(i) = min(masked(:));
-        
-        dim_ctr(i) = c(1);        
-    end
 
-    t = mean(bright_min) - std(bright_min);
-    bt = mean(dim_ctr) * 0.1;
-    
+% compute thresholds for frame using kmeans for k=2, 10 iterations
+[clusters, centers] = kmeans(im, 2, 10);
+
+% not sure if safe to assume kmeans returns clusters in order of
+% cluster center magnitude
+[~,hi_cluster] = max(centers);
+[~,lo_cluster] = min(centers);
+
+bt_frac = 0.1; % choose value for bthresh that is the minimum
+% from the dim cluster + 10% of the range.
+
+lo_values = im(find(clusters==lo_cluster));
+t = min(im(find(clusters==hi_cluster)));
+bt = min(lo_values) + bt_frac * (max(lo_values)-min(lo_values));
+
+
+%     numim = length(im);
+%
+%     bright_min = zeros(1,numim);
+%     dim_ctr = zeros(1,numim);
+%
+%     for i=1:numim
+%         [u,c] = kmeans(im{i},2,10);
+%
+%         masked = (u==2).*im{i};
+%         masked(~masked) = inf;
+%         bright_min(i) = min(masked(:));
+%
+%         dim_ctr(i) = c(1);
+%     end
+%
+%     t = mean(bright_min) - std(bright_min);
+%     bt = mean(dim_ctr) * 0.1;
+%

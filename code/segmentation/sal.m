@@ -9,13 +9,15 @@ function m=sal(input_im)
     % dimensions
     [rows,cols,channels] = size(input_im);    
 
-    if (channels == 3) then
+    if (channels == 3) 
         % step 1: go from sRGB color space to L*a*b*
         cform = makecform('srgb2lab');
         im = applycform(input_im,cform);
     else
         im = input_im;
     end
+    
+    im = double(im);
     
     % kernel size is determined by dimension of image with largest
     % extent.
@@ -40,10 +42,10 @@ function m=sal(input_im)
     
     % create the new image as being full of pixels with the minimum
     % intensity from inside the original image
-    imbig = ones(rows+pad,cols+pad) .* min(im(:));
+    imbig = ones(rows+pad,cols+pad,channels) .* min(im(:));
     
     % put the original image in the middle of the large padded image
-    imbig(hpad:(hpad+rows-1),(hpad:hpad+cols-1)) = im;
+    imbig(hpad:(hpad+rows-1),(hpad:hpad+cols-1),:) = im;
     
     % for each kernel size, create the convolution kernel and
     % compute the difference with the original image.
@@ -54,15 +56,18 @@ function m=sal(input_im)
         % note: for very large kernels, it is fastest to use an
         % FFT-based convolution implementation.  must use this instead
         % of conv2 from matlab for performance reasons.
-        c{i} = abs(conv2fft(double(imbig),kern,'same') - double(imbig));
+        for j=1:channels
+            c{i}(:,:,j) = abs(conv2fft(double(imbig(:,:,j)),kern,'same') ...
+                - double(imbig(:,:,j)));
+        end
     end        
     
     % accumulate up the m vector
-    mbig=zeros(rows+pad,cols+pad);
+    mbig=zeros(rows+pad,cols+pad,channels);
     for i=1:length(ksiz)
         mbig=mbig+c{i};
     end
     
     % extract the middle of the m matrix which corresponds to the
     % m-values for the original image
-    m = mbig(hpad:(hpad+rows-1),(hpad:hpad+cols-1));
+    m = mbig(hpad:(hpad+rows-1),(hpad:hpad+cols-1),:);
