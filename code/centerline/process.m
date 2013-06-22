@@ -63,14 +63,24 @@ hc = zeros((hi-lo)+1,1);
 
 avg_time = 0; %initialization and assignment?
 
-im = double(rgb2gray(imread(sprintf('%s%04d%s',filenamebase,refframe,extn))));
+im = imread(sprintf('%s%04d%s',filenamebase,refframe,extn));
+if (length(size(im))==2)
+    im = double(im);
+else
+    im = double(rgb2gray(im));
+end
 refmean = mean(im(:));
 
 pixcount = zeros(size(im));
 
 for i=lo:hi
     tic;
-    im = double(rgb2gray(imread(sprintf('%s%04d%s',filenamebase,i,extn))));
+    im = imread(sprintf('%s%04d%s',filenamebase,i,extn));
+    if (length(size(im))==2)
+        im = double(im);
+    else
+        im = double(rgb2gray(im));
+    end
 
     cap = sprintf('Image %04d',i);
     
