@@ -1,12 +1,20 @@
+%
 % be sure to addpath(genpath(/where/nematodes/code/is))
 % to pick up the right kmeans
-function track_one(im)
+%
+% call with image sequence and then a 1x2 vector [col, row] of the
+% point of interest to track
+%
+% mjsottile@gmail.com
+%
+function track_one(im, seed_coords)
     n = length(im);
 
     % manually find column and row in first frame of neuron to
     % track
-    track_point = [507, 123];
-    
+    % track_point = [507, 123];
+    track_point = seed_coords;    
+
     for i=1:n
         % convert to double
         img = double(im{i});
