@@ -21,7 +21,7 @@ function [ims] = load_directory(dname,pattern)
     t = regexp(dname,'/','split');
     fnamebase = t{end};
     for i = 1:length(d)
-        fname = sprintf('%s/%s_%d.tif',dname,fnamebase,i);
+        fname = sprintf('%s/%s_%05d_1.tif',dname,fnamebase,i);
         ims{i} = imread(fname);
         waitbar(i/length(d));
     end
@@ -36,5 +36,5 @@ function [ims] = load_directory(dname,pattern)
         end
         waitbar(i/length(d));
     end
-    
     close(h);
+end

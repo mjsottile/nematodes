@@ -1,4 +1,4 @@
-function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
+function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames, varargin)
 %
 % calcium imaging processing code
 %
@@ -70,6 +70,7 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
     addParamValue(p, 'thresh', -1);
     addParamValue(p, 'bthresh', -1);
     addParamValue(p, 'circle', -1);
+    addParamValue(p, 'rig', 1);
     parse(p, frames, varargin{:});
     
     % frames
@@ -86,10 +87,10 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
     end
     
     % background subtraction
-    if (p.Results.bthresh == -1)
+    if (p.Results.bthresh == or(-1,1))
         handle_background = 1; %Set to 1 for background, 0 for not.
     else
-        handle_background = 1;
+        handle_background = 0;
         bthresh = p.Results.bthresh;
     end
     
@@ -105,7 +106,7 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
 %% the rest of the code
 
     % signal to return
-    sig = zeros(1,length(im));
+    ratio = zeros(1,length(im));
 
     % signal for each side individually
     yfp = zeros(1,length(im));
@@ -205,10 +206,10 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
           lhs_background = lhs .* double(background_mask);
           rhs_background = rhs .* double(background_mask);
         
-          % compute y_bkg and c_bkg as average value of pixels determined
+          % compute lbkg and rbkg as average value of pixels determined
           % to be within what we call the background region
-          ybkg = sum(lhs_background(:))/length(find(background_mask));
-          cbkg = sum(rhs_background(:))/length(find(background_mask));
+          lbkg = sum(lhs_background(:))/length(find(background_mask));
+          rbkg = sum(rhs_background(:))/length(find(background_mask));
         end          
       
         % mask the halves
@@ -223,21 +224,30 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
         % pixels to get the average intensity.  Subtract from each the
         % average of the background pixels determined above if
         % handle_bakground is set.
-        if (handle_background == 1)
-            yfp(i) = (sum(lhs_masked(:))/lhs_nnz) - ybkg;
-            cfp(i) = (sum(rhs_masked(:))/rhs_nnz) - cbkg;
+        if (p.Results.rig==1) % if rig 1, lhs is yfp. if rig 2, lhs is cfp
+            if (handle_background == 1)
+                yfp(i) = (sum(lhs_masked(:))/lhs_nnz) - lbkg;
+                cfp(i) = (sum(rhs_masked(:))/rhs_nnz) - rbkg;
+            else
+                yfp(i) = (sum(lhs_masked(:))/lhs_nnz);
+                cfp(i) = (sum(rhs_masked(:))/rhs_nnz);
+            end
         else
-            yfp(i) = (sum(lhs_masked(:))/lhs_nnz);
-            cfp(i) = (sum(rhs_masked(:))/rhs_nnz);
+            if (handle_background == 1)
+                yfp(i) = (sum(rhs_masked(:))/rhs_nnz) - rbkg;
+                cfp(i) = (sum(lhs_masked(:))/lhs_nnz) - lbkg;
+            else
+                yfp(i) = (sum(rhs_masked(:))/rhs_nnz);
+                cfp(i) = (sum(lhs_masked(:))/lhs_nnz);
+            end
         end
-        
-        sig(i) = yfp(i)/cfp(i);
+        ratio(i) = yfp(i)/cfp(i);
             
         % correct for R_CFP.  Paper recommends value of 0.6 if it wasn't
         % measured directly.  NOTE: we are not doing the f_bkg correction,
         % which is necessary to remove signal due to background noise versus
         % actual flourescence from the cell.
-        sig(i) = sig(i)-0.6;
+        ratio(i) = ratio(i)-0.6;
 
         %return centroid data
         centx(i) = Smax(largest_max).Centroid(1);
@@ -264,9 +274,10 @@ function [sig,yfp,cfp,nangle] = calcium_process(frames, varargin)
 
         % signal so far
         subplot(2,2,3:4);
-        plot(sig);
+        plot(ratio);
 
         drawnow;
     end
-
-[nangle] = neuron_angle(framesize, centx, centy);
+    orientation = p.Results.rig;
+    [nangle] = neuron_angle(framesize, centx, centy,orientation);
+end

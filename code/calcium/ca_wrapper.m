@@ -1,5 +1,5 @@
-worms = [10:15];
-datestr = '130125';
+worms = [17:18];
+datestr = '130527';
 
 
 for i = 1:length(worms)
@@ -12,11 +12,11 @@ for i = 1:length(worms)
     extn = '*.tif';
 
     [ims] = load_directory(fnamebase,extn);
-    [ratio, yfp, cfp, nangle] = calcium_process(ims,'circle', 12);
-
-    savename = sprintf('%sw%02d.mat',datestr,wormnum);
+    [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(ims,'circle',10,'bthresh',1, 'rig', 2);
     
     clear ims 
-    
-    save(savename, 'ratio', 'yfp', 'cfp', 'nangle');
+
+    savename = sprintf('%sw%02d.mat',datestr,wormnum);
+    save(savename, 'ratio', 'yfp', 'cfp', 'nangle','refthresh','centx', 'centy');
 end
+%
