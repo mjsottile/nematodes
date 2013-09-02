@@ -119,10 +119,13 @@ else
     im=imread([Pathname,'/',Filename]);
     if (length(size(im))==2)
         gray_im = double(im);
+        max_val = max(gray_im(:));
     else
         gray_im = double(rgb2gray(im));
+        max_val = 255.0;
     end
     setappdata(handles.imageAxes, 'ImageData', gray_im);
+    set(handles.threshSlider,'Max',max_val);
     axes(handles.imageAxes);
     imagesc(gray_im);
     colormap(gray);
