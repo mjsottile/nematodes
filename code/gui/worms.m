@@ -117,9 +117,14 @@ if (Filename == 0)
 else
     set(handles.filename, 'String', Filename);
     im=imread([Pathname,'/',Filename]);
-    setappdata(handles.imageAxes, 'ImageData', double(rgb2gray(im)));
+    if (length(size(im))==2)
+        gray_im = double(im);
+    else
+        gray_im = double(rgb2gray(im));
+    end
+    setappdata(handles.imageAxes, 'ImageData', gray_im);
     axes(handles.imageAxes);
-    imagesc(double(rgb2gray(im)));
+    imagesc(gray_im);
     colormap(gray);
 end
 
