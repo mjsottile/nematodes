@@ -18,6 +18,7 @@ function track_one(im, seed_coords)
     for i=1:n
         % convert to double
         img = double(im{i});
+       
         
         % kmeans segmentation: split into 4 segments, 35 iterations.
         % 35 was selected by observing when the algorithm appeared to
@@ -43,17 +44,20 @@ function track_one(im, seed_coords)
         d_centroids = (centroids - repmat(track_point,size(centroids,1),1)).^2;
         d_centroids = sqrt(sum(d_centroids,2));
 
-        disp(d_centroids)
+        %disp(d_centroids)
         [~,nearest_idx] = min(d_centroids);
         
         % update track_point with centroid that was closest
         track_point = centroids(nearest_idx,:);
         
         % DEBUG: plot
+        cap = sprintf('Image %04d',i);
+        
         imagesc(img);colormap(gray);
         hold on;
         plot(centroids(:,1),centroids(:,2),'y+');
         plot(track_point(:,1),track_point(:,2),'ro');
         hold off;
+        title(cap);
         drawnow;
     end
