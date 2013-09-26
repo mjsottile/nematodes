@@ -1,40 +1,45 @@
 %
-% load a directory of images
-%
-% INPUT:
-% 
-%   dname   : The directory name containing the images.
-%   pattern : Filename pattern for files in the directory, such as '*.png'
+% Load a directory of images from user selected folder. 
 %
 % OUTPUT:
 %
 %  ims      : cell array of N images that matched the pattern.  The images
 %             are returned as double precision gray scale, NOT rgb.
 %
-% AUTHOR: matt sottile
+% AUTHORS: 
+% 
+% matt sottile
 %         mjsottile@me.com // msottile@uoregon.edu
-% MODIFIER: kat mccormick
-%           kat.mccormick@gmail.com
-function [ims] = load_directory(dname,pattern)
-    d = dir(strcat(dname,'/',pattern));
+% kat mccormick
+%         kat.mccormick@gmail.com
+
+function [ims] = load_directory
+    dname = uigetdir;
+    d = dir(dname);
+    names = {d.name};
+    
+    % Sometimes the directory contains empty items. Getting rid of
+    % those here
+    bytes = [d.bytes];
+    names = names(bytes>0);
+    
     h = waitbar(0,'Loading...');
-    t = regexp(dname,'/','split');
-    fnamebase = t{end};
-    for i = 1:length(d)
-        fname = sprintf('%s/%s_%05d_1.tif',dname,fnamebase,i);
+    for i = 1:length(names)
+        file_name = names{i};
+        fname = sprintf('%s/%s',dname,file_name);
         ims{i} = imread(fname);
         waitbar(i/length(d));
     end
     close(h);
-    
     h = waitbar(0,'Converting...');
-    for i = 1:length(d)
+    for i = 1:length(names)
         if (size(ims{i},3)>1)
             ims{i} = double(rgb2gray(ims{i}));
         else
             ims{i} = double(ims{i});
         end
-        waitbar(i/length(d));
+        waitbar(i/length(names));
     end
+    
     close(h);
-end
+    
