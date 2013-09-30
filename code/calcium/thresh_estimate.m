@@ -1,4 +1,9 @@
 function [t,bt] = thresh_estimate(im)
+% Gives a threshold and background threshold for a single frame. 
+% kmeans input of 3 clusters, 10 iterations is typical. The user can input
+% hard-coded fractions of the top and bottom cluster intensities to be
+% returned in the t, bt variables. 
+
 
 % compute thresholds for frame using kmeans for k=3, 10 iterations
 [clusters, centers] = kmeans(im, 3, 10);
@@ -8,31 +13,17 @@ function [t,bt] = thresh_estimate(im)
 [~,hi_cluster] = max(centers);
 [~,lo_cluster] = min(centers);
 
-bt_frac = 0.6; % choose value for bthresh that is the minimum
-% from the dim cluster + 60% of the range.
-t_frac = 0.6;
+% fraction of the dimmest cluster that will be used. 
+bt_frac = 0.6;
+% fraction of the brightest cluster that will be used. 
+t_frac = 1.0; 
+
 
 lo_values = im(find(clusters==lo_cluster));
 hi_values = im(find(clusters==hi_cluster));
-t = min(hi_values)+ t_frac * (max(hi_values) - min(hi_values));
+
+% threshold is maximum value from brightest cluster - t_frac % of the cluster range. 
+t = max(hi_values) - t_frac * (max(hi_values) - min(hi_values));
+% background thresh is the minimum from the dim cluster 
+% + bt_frac% of the cluster range.
 bt = min(lo_values) + bt_frac * (max(lo_values)-min(lo_values));
-
-
-%     numim = length(im);
-%
-%     bright_min = zeros(1,numim);
-%     dim_ctr = zeros(1,numim);
-%
-%     for i=1:numim
-%         [u,c] = kmeans(im{i},2,10);
-%
-%         masked = (u==2).*im{i};
-%         masked(~masked) = inf;
-%         bright_min(i) = min(masked(:));
-%
-%         dim_ctr(i) = c(1);
-%     end
-%
-%     t = mean(bright_min) - std(bright_min);
-%     bt = mean(dim_ctr) * 0.1;
-%
