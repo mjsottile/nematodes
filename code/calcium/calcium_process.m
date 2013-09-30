@@ -77,8 +77,10 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
     im = p.Results.frames;
 
     % flag to see if we use the circle ROI or the largest connected
-    % component.  WARNING: setting this to 0 and using the connected
-    % component stuff is broken.  badly.  
+    % component. If not specified in call to function, connected component
+    % only is used. If 'circle' flag is used in call, then a circle of the
+    % radius specified by the user and centered at the cenroid of the connected 
+    % component will be used as the ROI. 
     if (p.Results.circle == -1)
         use_circle = 0;
     else
@@ -86,9 +88,10 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
         radius = p.Results.circle;
     end
     
-    % background subtraction
+    % background subtraction. Set to 1 for background, 0 for not. If not
+    % specified in function call, default is to subtract background. 
     if (p.Results.bthresh == or(-1,1))
-        handle_background = 1; %Set to 1 for background, 0 for not.
+        handle_background = 1; 
     else
         handle_background = 0;
         bthresh = p.Results.bthresh;
@@ -153,6 +156,7 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
 
         % binary image with all pixels within thresh of the max intensity
         BWmax = lhs > thresh;
+        disp(length(find(BWmax==1)))
 
         % compute connected components of thresholded regions
         CCmax = bwconncomp(BWmax);
