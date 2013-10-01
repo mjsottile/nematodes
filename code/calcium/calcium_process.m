@@ -134,7 +134,8 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
     else refthresh=p.Results.thresh;
     end
     
-    
+    % find the biggest connected component above threshold in the top 25%
+    % of brightest frames
     refframe = find_goodframe(im, refthresh, 0.25);
     
     % register to obtain transform.  discard registered frames since we will
@@ -154,7 +155,8 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
         % maximum intensity
         maxval = max(lhs(:));
 
-        % binary image with all pixels within thresh of the max intensity
+        % binary image with all pixels in the image greater than the
+        % threshold
         BWmax = lhs > thresh;
         disp(length(find(BWmax==1)))
 
