@@ -8,12 +8,36 @@
 
 
 %% Load the directory
-%ims = ui_load_directory;
+ims = load_directory;
+
+%% Get the transformation from left hand side (LHS) to right hand side (RHS)
+refthresh = 0;
+    numtests = 150;
+    testindices = (1:numtests)*floor(length(ims)/numtests);
+    disp('Sampling images for thresholding.');
+    
+    if (p.Results.thresh ==-1)
+        for i=1:numtests
+        [testt,~] = thresh_estimate(ims{testindices(i)});
+        refthresh = refthresh + testt;
+        end   
+    refthresh = refthresh / numtests;
+    else refthresh=p.Results.thresh;
+    end
+    
+    
+    refframe = find_goodframe(ims, refthresh, 0.25);
+    
+    % register to obtain transform.  discard registered frames since we will
+    % re-register anyway later using the tform object.
+    [~,~,tform] = splitter(double(ims{refframe}));
+    framesize = size(ims{refframe});
 
 
-%% Get user input on the neuron locations
+%% Get user input on the neuron locations in the first frame
 figure; 
-imagesc(ims{1}(:,1:320));
+[lhs,rhs] = splitter2(ims{1},tform);
+imagesc(lhs);
 disp('Choose neurons to analyze. Hit return when finished with selections.')
 [xs,ys] = ginput;
 seed_coords = [xs ys];
@@ -29,17 +53,17 @@ for i=1:num_ims
         img = double(ims{i});
        
         
-        % kmeans segmentation: split into 4 segments, 35 iterations.
-        % 35 was selected by observing when the algorithm appeared to
-        % converge for the sample data I was provided.
-        [km,c] = kmeans(img,5,35);
+        % kmeans segmentation: split into 3 segments, 10 iterations.
+        % This is not convergent, but does put neurons in top segment on
+        % the test data set
+        [km,c] = kmeans(img,3,10);
         
         % pick the segment that holds the brightest pixels
-        bright = km>=4;
+        bright = km==3;
         
         % compute centroid and area for each independent component in
         % the segmented image
-        s = regionprops(bright, 'centroid', 'area');
+        s = regionprops(bright, 'centroid', 'area','meanintensity', 'pixelIdxList');
         
         centroids = cat(1,s.Centroid);
         areas = cat(1,s.Area);
@@ -63,7 +87,7 @@ for i=1:num_ims
         imagesc(img);colormap(gray);
         hold on;
         plot(centroids(:,1),centroids(:,2),'y+');
-        plot(track_points(:,1,i),track_points(:,2,i),'ro');
+        plot(track_points(:,1,i+1),track_points(:,2,i+1),'ro');
         hold off;
         title(cap);
         drawnow;
