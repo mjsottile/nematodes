@@ -16,14 +16,13 @@ refthresh = 0;
     testindices = (1:numtests)*floor(length(ims)/numtests);
     disp('Sampling images for thresholding.');
     
-    if (p.Results.thresh ==-1)
-        for i=1:numtests
+ 
+    for i=1:numtests
         [testt,~] = thresh_estimate(ims{testindices(i)});
         refthresh = refthresh + testt;
-        end   
-    refthresh = refthresh / numtests;
-    else refthresh=p.Results.thresh;
     end
+    refthresh = refthresh / numtests;
+   
     
     
     refframe = find_goodframe(ims, refthresh, 0.25);
@@ -49,24 +48,26 @@ track_points(:,:,1) = seed_coords;
 %% Find the neurons in the images. 
 num_ims = length(ims);
 for i=1:num_ims
-        % convert to double
-        img = double(ims{i});
-       
+        [lhs,rhs] = splitter2(ims{i},tform);     
         
         % kmeans segmentation: split into 3 segments, 10 iterations.
         % This is not convergent, but does put neurons in top segment on
         % the test data set
-        [km,c] = kmeans(img,3,10);
+        [km,c] = kmeans(lhs,3,10);
         
         % pick the segment that holds the brightest pixels
         bright = km==3;
         
         % compute centroid and area for each independent component in
         % the segmented image
-        s = regionprops(bright, 'centroid', 'area','meanintensity', 'pixelIdxList');
-        
-        centroids = cat(1,s.Centroid);
-        areas = cat(1,s.Area);
+        r_lhs = regionprops(bright,lhs, 'centroid', 'area','meanintensity', 'pixelIdxList');
+        r_rhs = regionprops(bright,rhs, 'meanintensity', 'pixelIdxList');
+
+  
+        centroids = cat(1,r_lhs.Centroid);
+        areas = cat(1,r_lhs.Area);
+        lhs_intensities = cat(1, r_lhs.meanintensity);
+        rhs_intensities = cat(1, r_rhs.meanintensity);
 
         % filter out tiny segments that aren't neurons
         centroids = centroids(areas>10,:);
@@ -80,11 +81,13 @@ for i=1:num_ims
         
         % update track_point with centroid that was closest
         track_points(:,:,i+1) = centroids(nearest_idx,:);
+        lhs_int(i) = lhs_intensities(nearest_idx,:);
+        rhs_int(i) = rhs_intensities(nearest_idx,:);
         
         % DEBUG: plot
         cap = sprintf('Image %04d',i);
         
-        imagesc(img);colormap(gray);
+        imagesc(lhs);colormap(gray);
         hold on;
         plot(centroids(:,1),centroids(:,2),'y+');
         plot(track_points(:,1,i+1),track_points(:,2,i+1),'ro');

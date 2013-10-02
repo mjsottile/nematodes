@@ -24,6 +24,7 @@ function refframe = find_goodframe(ims, thresh, frac)
     % threshold. 
     [pixsort, idx2] = sort(nummasked);
     topidx = idx2(cutoff:end);
+    refframe = idx2(end);
     
     % find the biggest connected component in the frames we consider
     % to be in the best frac% of the frames.
