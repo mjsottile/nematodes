@@ -13,9 +13,10 @@ function [t,bt] = thresh_estimate(im)
 [~,hi_cluster] = max(centers);
 [~,lo_cluster] = min(centers);
 
-% fraction of the dimmest cluster that will be used. 
+% fraction of the dimmest cluster that will be used. typical values is 0.6%
 bt_frac = 0.6;
-% fraction of the brightest cluster that will be used. 
+% fraction of the brightest cluster that will be used. typical value is
+% 0.4%
 t_frac = 1.0; 
 
 
