@@ -151,9 +151,6 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
         [lhs,rhs] = splitter2(im{i},tform);
         
         [thresh, bthresh] = thresh_estimate(lhs);
-        
-        % maximum intensity
-        maxval = max(lhs(:));
 
         % binary image with all pixels in the image greater than the
         % threshold
@@ -206,7 +203,6 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
         
         % find all pixels that are below bthresh to define the background
         if (handle_background == 1)
-          minval = min(lhs(:));
           background_mask = lhs < bthresh;
           
           lhs_background = lhs .* double(background_mask);
