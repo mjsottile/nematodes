@@ -23,6 +23,11 @@ function [ims] = load_directory
     bytes = [d.bytes];
     names = names(bytes>0);
     
+ %sort to avoid lexographical indexing. must download sort_nat from FEX
+    names = sort_nat(names);
+
+    
+    
     h = waitbar(0,'Loading...');
     for i = 1:length(names)
         file_name = names{i};

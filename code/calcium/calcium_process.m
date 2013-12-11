@@ -155,7 +155,7 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
         % binary image with all pixels in the image greater than the
         % threshold
         BWmax = lhs > thresh;
-        disp(length(find(BWmax==1)))
+        disp([length(find(BWmax==1)) thresh])
 
         % compute connected components of thresholded regions
         CCmax = bwconncomp(BWmax);
