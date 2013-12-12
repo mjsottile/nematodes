@@ -33,7 +33,7 @@ function refframe = find_goodframe(ims, thresh, frac)
     % since idx2 was computes from a SHORTER array than idx given that
     % we sorted only those frames from the bright index set, we need
     % to correct the best_idx2 value to map to the original index set.
-    best = best_idx2 + cutoff;
+    best = best_idx2 + cutoff-1;
     refframe = idx(best);
     
 %   % broken code below

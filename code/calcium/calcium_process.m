@@ -136,7 +136,7 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
     
     % find the biggest connected component above threshold in the top 25%
     % of brightest frames
-    refframe = find_goodframe(im, refthresh, 0.25);
+    refframe = find_goodframe(im, refthresh, 0.25)
     
     % register to obtain transform.  discard registered frames since we will
     % re-register anyway later using the tform object.
@@ -155,7 +155,8 @@ function [ratio,yfp,cfp,refthresh,centx,centy, nangle] = calcium_process(frames,
         % binary image with all pixels in the image greater than the
         % threshold
         BWmax = lhs > thresh;
-        disp([length(find(BWmax==1)) thresh])
+        disp_string = sprintf('Threshold is %d with %d pixels exceeding',thresh, length(find(BWmax==1)));
+        disp(disp_string);
 
         % compute connected components of thresholded regions
         CCmax = bwconncomp(BWmax);
