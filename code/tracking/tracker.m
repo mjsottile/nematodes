@@ -1,3 +1,8 @@
+%
+% tracking code prototype
+%
+% matt sottile / mjsottile@gmail.com
+%
 function [xs,ys,zs,adj] = tracker(ims, thresh, areaCutoff)
 
   close all;
